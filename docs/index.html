@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Which Content Pages Should You Review First? — A Refresh-Priority Model on FlyRank Search Data</title>
+<meta name="description" content="A client-grouped, leakage-checked model that ranks content pages for manual refresh review, built on the FlyRank ML Internship dataset.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --primary:#2563EB;
+    --text:#0F172A;
+    --bg:#F8FAFC;
+    --accent:#F59E0B;
+    --muted:#64748B;
+    --line:#E2E8F0;
+    --card:#FFFFFF;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter', -apple-system, sans-serif;
+    line-height:1.65;
+    font-size:17px;
+  }
+  h1,h2,h3{
+    font-family:'Poppins', sans-serif;
+    font-weight:600;
+    line-height:1.25;
+    letter-spacing:-0.01em;
+  }
+  .wrap{max-width:760px;margin:0 auto;padding:0 24px;}
+  header.hero{
+    border-bottom:1px solid var(--line);
+    padding:72px 0 48px;
+  }
+  .kicker{
+    color:var(--primary);
+    font-weight:600;
+    font-size:15px;
+    margin:0 0 14px;
+  }
+  h1.title{
+    font-size:clamp(28px, 4.4vw, 42px);
+    margin:0 0 20px;
+    max-width:15ch;
+  }
+  .byline{
+    color:var(--muted);
+    font-size:15px;
+    margin-bottom:36px;
+  }
+  .byline a{color:var(--primary);text-decoration:none;}
+  .byline a:hover{text-decoration:underline;}
+  .abstract{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-left:3px solid var(--primary);
+    border-radius:6px;
+    padding:24px 28px;
+    font-size:16px;
+    color:var(--text);
+  }
+  .abstract p{margin:0;}
+  main{padding:8px 0 96px;}
+  section{padding:48px 0;border-bottom:1px solid var(--line);}
+  section:last-of-type{border-bottom:none;}
+  h2{font-size:26px;margin:0 0 20px;}
+  h2 .num{color:var(--primary);margin-right:10px;font-variant-numeric:tabular-nums;}
+  h3{font-size:18px;margin:28px 0 10px;}
+  p{margin:0 0 16px;max-width:70ch;}
+  ul,ol{margin:0 0 16px;padding-left:22px;max-width:68ch;}
+  li{margin-bottom:8px;}
+  code{
+    background:#EEF2F7;
+    padding:2px 6px;
+    border-radius:4px;
+    font-size:0.88em;
+    font-family:'SF Mono', Consolas, monospace;
+  }
+  pre{
+    background:var(--text);
+    color:#E2E8F0;
+    padding:18px 20px;
+    border-radius:8px;
+    overflow-x:auto;
+    font-size:14px;
+    line-height:1.6;
+  }
+  pre code{background:none;padding:0;color:inherit;}
+  table{
+    width:100%;
+    border-collapse:collapse;
+    margin:20px 0;
+    font-size:15px;
+  }
+  th,td{
+    text-align:left;
+    padding:10px 14px;
+    border-bottom:1px solid var(--line);
+  }
+  th{
+    font-weight:600;
+    color:var(--muted);
+    font-size:13px;
+  }
+  tr.highlight td{font-weight:600;}
+  figure{margin:28px 0;}
+  figure img{
+    width:100%;
+    border:1px solid var(--line);
+    border-radius:8px;
+    display:block;
+  }
+  figcaption{
+    font-size:14px;
+    color:var(--muted);
+    margin-top:10px;
+  }
+  .callout{
+    background:#FFFBEB;
+    border:1px solid #FDE68A;
+    border-radius:6px;
+    padding:16px 20px;
+    font-size:15px;
+    margin:20px 0;
+  }
+  .callout strong{color:#92400E;}
+  a{color:var(--primary);}
+  .stat-row{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:16px;
+    margin:24px 0;
+  }
+  .stat{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:16px 18px;
+  }
+  .stat .n{
+    font-family:'Poppins',sans-serif;
+    font-weight:600;
+    font-size:24px;
+    color:var(--primary);
+    display:block;
+  }
+  .stat .label{font-size:13px;color:var(--muted);}
+  footer{
+    padding:40px 0 60px;
+    color:var(--muted);
+    font-size:14px;
+  }
+  footer a{color:var(--primary);text-decoration:none;}
+  @media (max-width:600px){
+    .stat-row{grid-template-columns:1fr 1fr;}
+    header.hero{padding:48px 0 36px;}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="kicker">Search Intelligence Capstone — Lane 2</p>
+    <h1 class="title">Which Content Pages Should You Review First?</h1>
+    <p class="byline">A refresh-priority model on FlyRank search data · Arshad Nazir ·
+      <a href="https://github.com/ArshadNazir1/flyrank-ml-internship-starter" target="_blank" rel="noopener">Repo on GitHub</a>
+    </p>
+    <div class="abstract">
+      <p>
+        This project asks which content pages a content team should review first based on observable search and content signals.
+        Using FlyRank's anonymized starter release of 30,000 content pages, I trained a logistic regression model to identify pages whose click-through rate underperforms their position tier.
+        The model uses content, position, visibility, freshness, search-demand, competition, intent, and related signals and was evaluated with a five-fold client-grouped validation design to reduce client-level leakage.
+        On the client-grouped evaluation, logistic regression achieved 0.737 accuracy, 0.774 precision, 0.593 recall, 0.672 F1, and 0.804 ROC-AUC, outperforming the position-based baseline on the reported classification metrics.
+        The resulting score is used to create a ranked, reason-coded review queue for human editors and should be treated as directional decision support rather than an automated publishing decision or a causal claim about search-engine behavior.
+      </p>
+    </div>
+  </div>
+</header>
+
+<main>
+<div class="wrap">
+
+  <section id="introduction">
+    <h2><span class="num">01</span>Introduction</h2>
+    <p>
+      Content that ranks in Google search quietly decays — rankings slip, clicks drop — and most
+      teams notice too late. With thousands of pages and a small editorial team, the real question
+      isn't <em>whether</em> to review content, it's <em>which page first</em>.
+    </p>
+    <p>
+      This project supports that one decision: a content editor or SEO analyst deciding which pages
+      to check before checking every page manually. After a page is flagged, the team still decides
+      whether to refresh, expand, protect, prune, or simply monitor it — the model only supports
+      that decision, it never makes it.
+    </p>
+    <p>
+      A wrong call has an asymmetric cost. Flagging a fine page wastes a reviewer's time — annoying,
+      recoverable. Missing a page that actually needs attention means it stays unreviewed indefinitely,
+      since nothing pointed to it. That asymmetry is why recall gets specific attention in the Results
+      section below, not just accuracy.
+    </p>
+    <p>
+      A single fixed rule can combine a couple of signals at once. Whether a page is actually
+      underperforming depends on several signals together — position, freshness, content type, search
+      intent, competition — which is the kind of multi-factor pattern a trained model can weigh better
+      than a hand-written if-statement, provided it actually beats that rule on the same data. That
+      comparison is the center of this paper.
+    </p>
+  </section>
+
+  <section id="data">
+    <h2><span class="num">02</span>Data</h2>
+    <p>
+      This study uses the FlyRank ML Internship anonymized starter release, specifically the
+      <code>content_refresh_anonymized.csv</code> content-refresh table, covering a single
+      approximately 90-day performance snapshot rather than a multi-period time series.
+      <code>client_id</code> and <code>content_id</code> are hashed pseudonyms; no client names,
+      domains, URLs, or raw search queries appear anywhere in this dataset or in this paper.
+    </p>
+    <div class="stat-row">
+      <div class="stat"><span class="n">30,000</span><span class="label">total pages in the snapshot</span></div>
+      <div class="stat"><span class="n">28,795</span><span class="label">pages with a ranking position, used for modeling</span></div>
+      <div class="stat"><span class="n">31</span><span class="label">distinct clients in the validated pool</span></div>
+    </div>
+    <h3>What went into the model</h3>
+    <p>
+      Position and position tier, impressions across three windows, days since last update, content
+      age, days with impressions, word/character count, search volume, competition and competition
+      level, CPC, content type, search intent, and which AI provider/model produced the content —
+      plus a missingness flag for every numeric field that has gaps.
+    </p>
+    <h3>What was deliberately left out — and why</h3>
+    <p>
+      <code>ctr</code>, <code>clicks</code>, <code>sessions</code>, <code>pageviews</code>,
+      <code>engagement_rate</code>, <code>scroll_rate</code>, <code>ai_traffic_pct</code>,
+      <code>trend_direction</code>, and <code>trend_pct</code> are outcome-adjacent — the model's
+      target is built directly from CTR, so any of these as a feature would leak the answer into the
+      model. They're used only as diagnostics, never as inputs. <code>client_id</code> is used purely
+      to group the validation split, never as a feature; FlyRank's own product decision flags
+      (health scores, quick-win tags) aren't in this release at all, since they encode a decision
+      someone already made and would make the comparison circular.
+    </p>
+  </section>
+
+  <section id="methodology">
+    <h2><span class="num">03</span>Methodology</h2>
+    <h3>Target</h3>
+    <p>
+      There's no ground-truth "needs refresh" label in this dataset, so the target is a proxy:
+      <code>ctr_underperforming</code> — true when a page's CTR sits below the median CTR of every
+      other page in its own position tier. It's built from observed CTR relative to peers at the
+      same position, not a manually invented threshold.
+    </p>
+    <h3>Baseline</h3>
+    <p>
+      The fair comparison is a position-vs-tier-median rule: flag a page if its average position is
+      worse than the median position for its tier. An earlier, CTR-based staleness rule was
+      deliberately <em>not</em> used as the baseline here — it reads CTR directly, and CTR is what
+      the target is built from, so comparing against it would compare the model to a rule that can
+      already see the answer.
+    </p>
+    <h3>Model and validation</h3>
+    <p>
+      Logistic Regression (<code>class_weight="balanced"</code>) inside a preprocessing pipeline —
+      median-impute and scale numeric features, one-hot encode categorical ones. Validated with
+      <code>StratifiedGroupKFold</code>, 5 folds, grouped by <code>client_id</code>, so every page
+      from a given client stays on one side of each fold — the model is never tested on a client it
+      partly trained on. A time-aware split wasn't possible, since the data is a single snapshot.
+    </p>
+    <h3>Leakage check</h3>
+    <p>
+      Every outcome-adjacent column listed in Data was confirmed absent from the final feature list
+      before training — the same check re-run against the exact features that went into the model.
+    </p>
+  </section>
+
+  <section id="results">
+    <h2><span class="num">04</span>Results</h2>
+    <p>
+      Base rate: <strong>45.4%</strong> of ranked pages are <code>ctr_underperforming</code> — worth
+      stating before any accuracy number, since a model needs to clear this before it means much.
+    </p>
+    <table>
+      <thead>
+        <tr><th>Model</th><th>Accuracy</th><th>Precision</th><th>Recall</th><th>F1</th><th>ROC-AUC</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Position baseline (client-grouped)</td>
+          <td>0.547</td><td>0.502</td><td>0.544</td><td>0.522</td><td>—</td>
+        </tr>
+        <tr>
+          <td>Logistic Regression — random row split</td>
+          <td>0.752</td><td>0.736</td><td>0.709</td><td>0.722</td><td>0.834</td>
+        </tr>
+        <tr class="highlight">
+          <td>Logistic Regression — client-grouped split (honest)</td>
+          <td>0.737</td><td>0.774</td><td>0.593</td><td>0.672</td><td>0.804</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      The model beats the baseline on every metric under the honest, client-grouped split. It's also
+      clearly weaker than the same model measured under a plain random split — pages from the same
+      client share patterns, so a random split lets that leak across train and test and inflates
+      every number. The grouped row is the one that should be trusted; the random-split row is shown
+      only to make that gap visible.
+    </p>
+    <p>
+      Recall (0.593) trailing precision (0.774) means the model is more likely to miss a real
+      underperformer than to wrongly flag a fine page — the more expensive failure mode given the
+      cost asymmetry described in the Introduction.
+    </p>
+    <figure>
+      <img src="img/capstone_action_counts.png" alt="Bar chart of recommended action counts across the ranked queue">
+      <figcaption>Figure 1. How the 28,795 ranked pages split across recommended actions. Most pages land in
+      <em>Monitor</em> — no strong signal was found, not a guarantee the page is fine.</figcaption>
+    </figure>
+    <figure>
+      <img src="img/capstone_freshness_insight.png" alt="Bar chart of mean model score by freshness tier">
+      <figcaption>Figure 2. Mean model score by freshness tier. Pages untouched for 181+ days score highest on
+      average — an observed pattern in this one snapshot, not evidence that staleness causes the score, or that
+      refreshing a page lowers it (see Limitations).</figcaption>
+    </figure>
+  </section>
+
+  <section id="limitations">
+    <h2><span class="num">05</span>Limitations &amp; honest framing</h2>
+    <ul>
+      <li>This is a single ~90-day snapshot, not a time series — there's no way to say from this data
+        whether a flagged page actually improves after review.</li>
+      <li>The client-grouped validation covers 31 clients. A client very different from this pool is
+        untested territory.</li>
+      <li>Recall trails precision, so some real underperformers are missed — a low model score is not
+        proof a page is fine.</li>
+      <li>The target is built from this dataset's own position-tier medians, not an external
+        benchmark — it would move if the underlying data changed.</li>
+      <li>The model score comes from <code>class_weight="balanced"</code> logistic regression, so it's
+        a ranking signal, not a calibrated probability.</li>
+      <li>The freshness pattern in Figure 2 is an observed association in one snapshot. It does not
+        prove staleness causes underperformance, or that refreshing a page would fix it — it's equally
+        consistent with already-struggling pages simply getting updated less often.</li>
+    </ul>
+    <div class="callout">
+      <strong>In one sentence:</strong> this model measures a directional, decision-support relationship
+      between the selected features and CTR underperformance in this evaluated dataset. It does not
+      prove causation, and it does not guarantee the same performance on future or unseen data.
+    </div>
+  </section>
+
+  <section id="recommendations">
+    <h2><span class="num">06</span>Ranked recommendations</h2>
+    <p>
+      The model's output feeds a five-band priority queue, using thresholds taken from the actual
+      score distribution (top decile / top quartile of model score, top quartile of 90-day
+      impressions) rather than picked by hand:
+    </p>
+    <table>
+      <thead>
+        <tr><th>Priority</th><th>Recommended action</th><th>Reason code</th><th>Pages</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>1</td><td>Refresh Content — Human Review</td><td><code>RC_HIGH_MODEL_AND_STALE</code></td><td>83</td></tr>
+        <tr><td>2</td><td>Review Content and Search Alignment</td><td><code>RC_HIGH_MODEL_RISK</code></td><td>2,797</td></tr>
+        <tr><td>3</td><td>Review Search Result Presentation</td><td><code>RC_HIGH_VISIBILITY_CTR_GAP</code></td><td>1,580</td></tr>
+        <tr><td>4</td><td>Review Content Candidate</td><td><code>RC_MODEL_REVIEW</code></td><td>4,301</td></tr>
+        <tr><td>5</td><td>Monitor</td><td><code>RC_MONITOR</code></td><td>20,034</td></tr>
+      </tbody>
+    </table>
+    <h3>Intended use</h3>
+    <p>
+      A review-prioritization tool for a content or SEO team — a ranked list of pages to look at
+      first, with a stated reason for each. Built for a human doing manual review, not automated
+      publishing. It only decides what to look at first; it never decides what to change, and it
+      never edits or publishes anything on its own.
+    </p>
+    <h3>Before acting on a flag</h3>
+    <ul>
+      <li>Confirm the reason actually matches reality — check the page really hasn't been updated,
+        not just that the field looks stale in this export.</li>
+      <li>Look at the page's real context — a high score with low impressions can mean the page never
+        had meaningful traffic to begin with.</li>
+      <li>Weigh seasonality — a 90-day window can catch a page mid-dip for reasons unrelated to
+        content quality.</li>
+    </ul>
+    <h3>What this should never be used for</h3>
+    <ul>
+      <li>Automatic publishing, editing, or removing content — every action ends at human review.</li>
+      <li>Automatic title or snippet changes from a CTR-gap flag alone — a low CTR has many possible
+        causes.</li>
+      <li>Automatic deprioritizing or pruning — <em>Monitor</em> means no strong signal was found, not
+        that a page is safe to remove.</li>
+      <li>Judging a person's or team's performance using <code>model_score</code>.</li>
+      <li>Treating a low score as proof a page is fine, given recall in Results is well below 1.0.</li>
+    </ul>
+  </section>
+
+  <section id="reproducibility">
+    <h2><span class="num">07</span>Reproducibility</h2>
+    <p>
+      Every number and chart in this paper comes directly from the capstone notebook, run against the
+      bundled dataset with a fixed random seed.
+    </p>
+    <pre><code>git clone https://github.com/ArshadNazir1/flyrank-ml-internship-starter.git
+cd flyrank-ml-internship-starter
+pip install -r requirements.txt
+jupyter notebook work/notebooks/capstone.ipynb
+# Runtime → Run all — seed = 42 throughout</code></pre>
+    <p>
+      The weekly notebooks this capstone builds on:
+    </p>
+    <ul>
+      <li><a href="https://github.com/ArshadNazir1/flyrank-ml-internship-starter/blob/main/work/notebooks/w01_research_question.ipynb" target="_blank" rel="noopener">w01 — Research question and lane</a></li>
+      <li><a href="https://github.com/ArshadNazir1/flyrank-ml-internship-starter/blob/main/work/notebooks/w02_ml_task_framing.ipynb" target="_blank" rel="noopener">w02 — ML task framing</a></li>
+      <li><a href="https://github.com/ArshadNazir1/flyrank-ml-internship-starter/blob/main/work/notebooks/w03_data_contract.ipynb" target="_blank" rel="noopener">w03 — Data contract</a></li>
+      <li><a href="https://github.com/ArshadNazir1/flyrank-ml-internship-starter/blob/main/work/notebooks/w04_baseline_score.ipynb" target="_blank" rel="noopener">w04 — Baseline action score</a></li>
+      <li><a href="https://github.com/ArshadNazir1/flyrank-ml-internship-starter/blob/main/work/notebooks/w05_model.ipynb" target="_blank" rel="noopener">w05 — Model</a></li>
+      <li><a href="https://github.com/ArshadNazir1/flyrank-ml-internship-starter/blob/main/work/notebooks/w06_validation_audit.ipynb" target="_blank" rel="noopener">w06 — Validation and claim audit</a></li>
+      <li><a href="https://github.com/ArshadNazir1/flyrank-ml-internship-starter/blob/main/work/notebooks/w07_action_playbook.ipynb" target="_blank" rel="noopener">w07 — Action playbook</a></li>
+      <li><a href="https://github.com/ArshadNazir1/flyrank-ml-internship-starter/blob/main/work/notebooks/capstone.ipynb" target="_blank" rel="noopener">Capstone — this paper's source notebook</a></li>
+    </ul>
+  </section>
+
+  <section id="acknowledgments">
+    <h2><span class="num">08</span>Acknowledgments &amp; data credit</h2>
+    <p>
+      Built on the FlyRank ML Internship dataset — <a href="https://flyrank.ai" target="_blank" rel="noopener">flyrank.ai</a>.
+    </p>
+  </section>
+
+</div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>Arshad Nazir — FlyRank AI Fluency Internship, Machine Learning track.
+      <a href="https://github.com/ArshadNazir1/flyrank-ml-internship-starter" target="_blank" rel="noopener">View the repo →</a>
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>
